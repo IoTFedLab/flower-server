@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 import timm
+from tqdm import tqdm
 from flwr_datasets import FederatedDataset
 from flwr_datasets.partitioner import IidPartitioner
 from torch.utils.data import DataLoader
@@ -93,23 +94,40 @@ def train(net, trainloader, epochs, lr, device):
     optimizer = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.01)
     net.train()
     running_loss = 0.0
-    for _ in range(epochs):
-        for batch in trainloader:
-            # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
-            if isinstance(batch, dict):
-                images = batch["img"].to(device)
-                labels = batch["label"].to(device)
-            else:
-                images, labels = batch
-                images = images.to(device)
-                labels = labels.to(device)
 
-            optimizer.zero_grad()
-            loss = criterion(net(images), labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
-    avg_trainloss = running_loss / len(trainloader)
+    # 에폭별 진행 표시
+    for epoch in range(epochs):
+        epoch_loss = 0.0
+
+        # 배치별 진행 표시
+        with tqdm(trainloader, desc=f"📚 Epoch {epoch+1}/{epochs}", unit="batch", leave=False) as pbar:
+            for batch in pbar:
+                # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
+                if isinstance(batch, dict):
+                    images = batch["img"].to(device)
+                    labels = batch["label"].to(device)
+                else:
+                    images, labels = batch
+                    images = images.to(device)
+                    labels = labels.to(device)
+
+                optimizer.zero_grad()
+                loss = criterion(net(images), labels)
+                loss.backward()
+                optimizer.step()
+
+                batch_loss = loss.item()
+                running_loss += batch_loss
+                epoch_loss += batch_loss
+
+                # 실시간 loss 표시
+                pbar.set_postfix({'loss': f'{batch_loss:.4f}'})
+
+        # 에폭 완료 후 평균 loss 출력
+        avg_epoch_loss = epoch_loss / len(trainloader)
+        print(f"   ✓ Epoch {epoch+1}/{epochs} 완료 - Avg Loss: {avg_epoch_loss:.4f}")
+
+    avg_trainloss = running_loss / (len(trainloader) * epochs)
     return avg_trainloss
 
 
@@ -118,20 +136,31 @@ def test(net, testloader, device):
     net.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     correct, loss = 0, 0.0
-    with torch.no_grad():
-        for batch in testloader:
-            # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
-            if isinstance(batch, dict):
-                images = batch["img"].to(device)
-                labels = batch["label"].to(device)
-            else:
-                images, labels = batch
-                images = images.to(device)
-                labels = labels.to(device)
 
-            outputs = net(images)
-            loss += criterion(outputs, labels).item()
-            correct += (torch.max(outputs.data, 1)[1] == labels).sum().item()
+    with torch.no_grad():
+        # 평가 진행 표시
+        with tqdm(testloader, desc="🔍 평가 중", unit="batch", leave=False) as pbar:
+            for batch in pbar:
+                # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
+                if isinstance(batch, dict):
+                    images = batch["img"].to(device)
+                    labels = batch["label"].to(device)
+                else:
+                    images, labels = batch
+                    images = images.to(device)
+                    labels = labels.to(device)
+
+                outputs = net(images)
+                batch_loss = criterion(outputs, labels).item()
+                loss += batch_loss
+                batch_correct = (torch.max(outputs.data, 1)[1] == labels).sum().item()
+                correct += batch_correct
+
+                # 실시간 정확도 표시
+                current_acc = correct / ((pbar.n + 1) * len(labels))
+                pbar.set_postfix({'acc': f'{current_acc:.4f}', 'loss': f'{batch_loss:.4f}'})
+
     accuracy = correct / len(testloader.dataset)
     loss = loss / len(testloader)
+    print(f"   ✓ 평가 완료 - Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
     return loss, accuracy
