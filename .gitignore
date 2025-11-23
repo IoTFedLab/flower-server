@@ -1,6 +1,7 @@
 data/
 models/
 docs/
+.DS_Store
 *.pt
 *.pth
 
