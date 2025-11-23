@@ -1,7 +1,9 @@
 """iot-fed: Flower / PyTorch 연합학습 서버 애플리케이션"""
 
 import torch
+import time
 from pathlib import Path
+from tqdm import tqdm
 from flwr.app import ArrayRecord, ConfigRecord, Context
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg
@@ -93,26 +95,76 @@ def main(grid: Grid, context: Context) -> None:
     print(f"📁 라운드별 모델 저장 디렉토리: {models_dir}\n")
 
     # FedAvg 전략 초기화
-    strategy = FedAvg(fraction_train=fraction_train)
+    strategy = FedAvg(
+        fraction_train=fraction_train,
+        min_train_nodes=1,       # 학습에 최소 1개 노드 필요
+        min_evaluate_nodes=1,    # 평가에 최소 1개 노드 필요
+        min_available_nodes=1,   # 시작에 최소 1개 노드 필요
+    )
 
     # 각 라운드마다 수동으로 실행하며 모델 저장
     current_arrays = arrays
-    for round_num in range(1, num_rounds + 1):
-        print(f"\n{'='*60}")
-        print(f"ROUND {round_num}/{num_rounds}")
-        print(f"{'='*60}")
 
-        # 1 라운드만 실행
-        result = strategy.start(
-            grid=grid,
-            initial_arrays=current_arrays,
-            train_config=ConfigRecord({"lr": lr}),
-            num_rounds=1,
-        )
+    print(f"\n{'='*70}")
+    print(f"🚀 연합학습 시작!")
+    print(f"{'='*70}")
+    print(f"📊 설정:")
+    print(f"   - 총 라운드: {num_rounds}")
+    print(f"   - 로컬 에폭: {context.run_config['local-epochs']}")
+    print(f"   - 학습률: {lr}")
+    print(f"   - 클라이언트 참여 비율: {fraction_train}")
+    print(f"{'='*70}\n")
 
-        # 라운드 결과 저장
-        current_arrays = result.arrays
-        save_round_model(round_num, current_arrays, models_dir)
+    # 전체 학습 시작 시간
+    total_start_time = time.time()
+
+    # tqdm 진행 바 생성
+    with tqdm(total=num_rounds, desc="🔄 연합학습 진행", unit="round", ncols=100, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]') as pbar:
+        for round_num in range(1, num_rounds + 1):
+            round_start_time = time.time()
+
+            print(f"\n{'='*60}")
+            print(f"ROUND {round_num}/{num_rounds}")
+            print(f"{'='*60}")
+
+            # 1 라운드만 실행
+            result = strategy.start(
+                grid=grid,
+                initial_arrays=current_arrays,
+                train_config=ConfigRecord({"lr": lr}),
+                num_rounds=1,
+            )
+
+            # 라운드 결과 저장
+            current_arrays = result.arrays
+            save_round_model(round_num, current_arrays, models_dir)
+
+            # 라운드 소요 시간 계산
+            round_elapsed = time.time() - round_start_time
+            total_elapsed = time.time() - total_start_time
+            avg_time_per_round = total_elapsed / round_num
+            remaining_rounds = num_rounds - round_num
+            eta = avg_time_per_round * remaining_rounds
+
+            print(f"   ⏱️  Round {round_num} 소요 시간: {round_elapsed:.2f}초")
+            if remaining_rounds > 0:
+                print(f"   ⏳ 예상 남은 시간: {eta:.2f}초 ({eta/60:.1f}분)")
+
+            # tqdm 업데이트
+            pbar.set_postfix({
+                'Round': f'{round_elapsed:.1f}s',
+                'Avg': f'{avg_time_per_round:.1f}s',
+                'ETA': f'{eta/60:.1f}m' if remaining_rounds > 0 else 'Done'
+            })
+            pbar.update(1)
+
+    # 전체 소요 시간 출력
+    total_elapsed = time.time() - total_start_time
+    print(f"\n{'='*70}")
+    print(f"✅ 전체 연합학습 완료!")
+    print(f"   총 소요 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.1f}분)")
+    print(f"   평균 라운드 시간: {total_elapsed/num_rounds:.2f}초")
+    print(f"{'='*70}\n")
 
     # 최종 모델을 디스크에 저장
     print(f"\n{'='*60}")
