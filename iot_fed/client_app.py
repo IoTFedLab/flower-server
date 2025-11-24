@@ -18,13 +18,21 @@ def train(msg: Message, context: Context):
 
     # 모델 로드 및 수신한 가중치로 초기화
     model = Net(num_classes=6, pretrained=False, drop_rate=0.2)
-    model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
+    state_dict = msg.content["arrays"].to_torch_state_dict()
+    # state_dict 키 형식이 'conv_stem.weight'처럼 'model.' 접두사가 없으면 추가
+    if state_dict:
+        first_key = next(iter(state_dict.keys()))
+        if not first_key.startswith("model."):
+            state_dict = {f"model.{k}": v for k, v in state_dict.items()}
+    model.load_state_dict(state_dict)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     # 데이터 로드
-    partition_id = context.node_config["partition-id"]
-    num_partitions = context.node_config["num-partitions"]
+    # node_config에 partition 정보가 없으면 기본값 사용 (단일 클라이언트 환경)
+    node_cfg = getattr(context, "node_config", {}) or {}
+    partition_id = int(node_cfg.get("partition-id", 0))
+    num_partitions = int(node_cfg.get("num-partitions", 1))
     use_cifar10 = context.run_config.get("use-cifar10", True)
     data_root = context.run_config.get("data-root", None)
     val_data_root = context.run_config.get("val-data-root", None)
@@ -68,8 +76,10 @@ def evaluate(msg: Message, context: Context):
     model.to(device)
 
     # 데이터 로드
-    partition_id = context.node_config["partition-id"]
-    num_partitions = context.node_config["num-partitions"]
+    # node_config에 partition 정보가 없으면 기본값 사용 (단일 클라이언트 환경)
+    node_cfg = getattr(context, "node_config", {}) or {}
+    partition_id = int(node_cfg.get("partition-id", 0))
+    num_partitions = int(node_cfg.get("num-partitions", 1))
     use_cifar10 = context.run_config.get("use-cifar10", True)
     data_root = context.run_config.get("data-root", None)
     val_data_root = context.run_config.get("val-data-root", None)
