@@ -30,9 +30,15 @@ fi
 echo "Server is reachable"
 echo ""
 
-# SuperNode 시작
-echo "🔗 Starting SuperNode..."
-flwr-supernode --insecure --superlink $SERVER_IP:$PORT
+# SuperNode 시작 (TCP Keepalive 설정 추가)
+echo "🔗 Starting SuperNode with TCP Keepalive..."
+# gRPC Keepalive 환경변수 설정
+export GRPC_KEEPALIVE_TIME_MS=10000           # 10초마다 keepalive ping
+export GRPC_KEEPALIVE_TIMEOUT_MS=5000         # 5초 응답 없으면 연결 끊김
+export GRPC_CLIENT_KEEPALIVE_TIME_MS=10000    # 클라이언트 keepalive
+export GRPC_CLIENT_KEEPALIVE_TIMEOUT_MS=5000  # 클라이언트 timeout
+
+flower-supernode --insecure --superlink $SERVER_IP:$PORT
 
 echo "=========================================="
 

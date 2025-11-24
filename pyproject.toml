@@ -54,10 +54,10 @@ default = "remote-federation"  # 배포용
 
 # Local simulation federation with virtual SuperNodes
 [tool.flwr.federations.local-simulation]
-options.num-supernodes = 1  # 민지 1명 (테스트)
+options.num-supernodes = 3  # 민지, 시우(총 2명)
 
 # Remote federation for 3 real devices (실제 배포용)
 [tool.flwr.federations.remote-federation]
-address = "127.0.0.1:9093"  # Control API (로컬에서 SuperLink에 연결)
+address = "127.0.0.1:9093"  # ServerApp이 로컬 SuperLink에 연결 (같은 서버에서 실행)
 insecure = true
-options.num-supernodes = 1  # 민지 1명 (테스트)
+options.num-supernodes = 3  # 총 3대 디바이스 (이 수만큼 연결될 때까지 대기)

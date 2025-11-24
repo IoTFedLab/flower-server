@@ -97,9 +97,9 @@ def main(grid: Grid, context: Context) -> None:
     # FedAvg 전략 초기화
     strategy = FedAvg(
         fraction_train=fraction_train,
-        min_train_nodes=1,       # 학습에 최소 1개 노드 필요
-        min_evaluate_nodes=1,    # 평가에 최소 1개 노드 필요
-        min_available_nodes=1,   # 시작에 최소 1개 노드 필요
+        min_train_nodes=3,       # 학습에 최소 3개 노드 필요
+        min_evaluate_nodes=3,    # 평가에 최소 3개 노드 필요
+        min_available_nodes=3,   # 시작에 최소 3개 노드 필요 (이 수만큼 연결될 때까지 대기)
     )
 
     # 각 라운드마다 수동으로 실행하며 모델 저장
