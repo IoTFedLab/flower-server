@@ -28,6 +28,9 @@ def train(msg: Message, context: Context):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
+    # FedProx: 글로벌 모델 파라미터 저장 (훈련 전 상태)
+    global_params = [p.clone().detach() for p in model.parameters()]
+
     # 데이터 로드
     # node_config에 partition 정보가 없으면 기본값 사용 (단일 클라이언트 환경)
     node_cfg = getattr(context, "node_config", {}) or {}
@@ -45,13 +48,18 @@ def train(msg: Message, context: Context):
         val_data_root=val_data_root
     )
 
-    # 훈련 함수 호출
+    # FedProx mu 파라미터 가져오기
+    mu = msg.content["config"].get("mu", 0.0)
+
+    # 훈련 함수 호출 (FedProx 파라미터 전달)
     train_loss = train_fn(
         model,
         trainloader,
         context.run_config["local-epochs"],
         msg.content["config"]["lr"],
         device,
+        global_params=global_params,
+        mu=mu,
     )
 
     # 응답 메시지 구성 및 반환

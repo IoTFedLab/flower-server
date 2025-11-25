@@ -31,6 +31,7 @@ def main(grid: Grid, context: Context) -> None:
     fraction_train: float = context.run_config["fraction-train"]
     num_rounds: int = context.run_config["num-server-rounds"]
     lr: float = context.run_config["lr"]
+    mu: float = context.run_config.get("fedprox-mu", 0.0)  # FedProx mu 파라미터
     checkpoint_path: str = context.run_config.get("checkpoint-path", None)
     resume_from_final: bool = context.run_config.get("resume-from-final", False)
 
@@ -112,6 +113,7 @@ def main(grid: Grid, context: Context) -> None:
     print(f"   - 총 라운드: {num_rounds}")
     print(f"   - 로컬 에폭: {context.run_config['local-epochs']}")
     print(f"   - 학습률: {lr}")
+    print(f"   - FedProx mu: {mu} {'(FedProx 활성화)' if mu > 0 else '(FedAvg 모드)'}")
     print(f"   - 클라이언트 참여 비율: {fraction_train}")
     print(f"{'='*70}\n")
 
@@ -127,11 +129,11 @@ def main(grid: Grid, context: Context) -> None:
             print(f"ROUND {round_num}/{num_rounds}")
             print(f"{'='*60}")
 
-            # 1 라운드만 실행
+            # 1 라운드만 실행 (FedProx mu 파라미터 포함)
             result = strategy.start(
                 grid=grid,
                 initial_arrays=current_arrays,
-                train_config=ConfigRecord({"lr": lr}),
+                train_config=ConfigRecord({"lr": lr, "mu": mu}),
                 num_rounds=1,
             )
 

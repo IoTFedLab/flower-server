@@ -87,13 +87,27 @@ def load_data(partition_id: int, num_partitions: int, use_cifar10: bool = True, 
     return trainloader, valloader
 
 
-def train(net, trainloader, epochs, lr, device):
-    """학습 데이터셋으로 모델 훈련"""
+def train(net, trainloader, epochs, lr, device, global_params=None, mu=0.0):
+    """학습 데이터셋으로 모델 훈련 (FedProx 지원)
+
+    Args:
+        net: 훈련할 모델
+        trainloader: 훈련 데이터 로더
+        epochs: 로컬 에폭 수
+        lr: 학습률
+        device: 디바이스 (CPU/GPU)
+        global_params: 글로벌 모델 파라미터 (FedProx용, None이면 FedAvg)
+        mu: FedProx proximal term 계수 (0.0이면 FedAvg와 동일)
+    """
     net.to(device)  # GPU 사용 가능하면 모델을 GPU로 이동
     criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.01)
     net.train()
     running_loss = 0.0
+
+    # FedProx: 글로벌 파라미터를 디바이스로 이동
+    if global_params is not None and mu > 0:
+        global_params = [p.to(device) for p in global_params]
 
     # 에폭별 진행 표시
     for epoch in range(epochs):
@@ -112,7 +126,20 @@ def train(net, trainloader, epochs, lr, device):
                     labels = labels.to(device)
 
                 optimizer.zero_grad()
-                loss = criterion(net(images), labels)
+
+                # 기본 Cross Entropy Loss
+                outputs = net(images)
+                ce_loss = criterion(outputs, labels)
+
+                # FedProx: Proximal term 추가
+                if global_params is not None and mu > 0:
+                    proximal_term = 0.0
+                    for local_param, global_param in zip(net.parameters(), global_params):
+                        proximal_term += torch.norm(local_param - global_param, p=2) ** 2
+                    loss = ce_loss + (mu / 2) * proximal_term
+                else:
+                    loss = ce_loss
+
                 loss.backward()
                 optimizer.step()
 
@@ -134,6 +161,7 @@ def train(net, trainloader, epochs, lr, device):
 def test(net, testloader, device):
     """테스트 데이터셋으로 모델 검증"""
     net.to(device)
+    net.eval()  # 평가 모드로 전환 (Dropout, BatchNorm 고정)
     criterion = torch.nn.CrossEntropyLoss()
     correct, loss = 0, 0.0
 
