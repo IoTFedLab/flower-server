@@ -17,7 +17,7 @@ def save_round_model(round_num: int, arrays: ArrayRecord, save_dir: Path):
     state_dict = arrays.to_torch_state_dict()
     model_path = save_dir / f"round_{round_num}.pt"
     torch.save(state_dict, model_path)
-    print(f"   💾 Round {round_num} 모델 저장: {model_path}")
+    print(f"   Round {round_num} 모델 저장: {model_path}")
 
 # ServerApp 생성
 app = ServerApp()
@@ -41,7 +41,7 @@ def main(grid: Grid, context: Context) -> None:
     # 이어서 학습 여부 확인
     final_model_path = Path("final_model.pt")
     if resume_from_final and final_model_path.exists():
-        print(f"\n🔄 이전 연합학습 결과에서 이어서 학습: {final_model_path}")
+        print(f"\n이전 연합학습 결과에서 이어서 학습: {final_model_path}")
         checkpoint = torch.load(final_model_path, map_location='cpu')
         state_dict = checkpoint
 
@@ -51,7 +51,7 @@ def main(grid: Grid, context: Context) -> None:
             state_dict = {f'model.{k}': v for k, v in state_dict.items()}
 
         global_model.load_state_dict(state_dict)
-        print("   ✓ 이전 연합학습 모델 로드 성공!\n")
+        print("   이전 연합학습 모델 로드 성공!\n")
     # 체크포인트 경로가 제공되면 사전학습된 가중치 로드
     elif checkpoint_path and Path(checkpoint_path).exists():
         print(f"\n사전학습된 가중치 로드 중: {checkpoint_path}")
@@ -64,15 +64,15 @@ def main(grid: Grid, context: Context) -> None:
             train_acc = checkpoint.get('train_acc', 'N/A')
             val_acc = checkpoint.get('val_acc', 'N/A')
 
-            print(f"   ✓ Epoch {epoch}에서 체크포인트 로드됨")
+            print(f"   Epoch {epoch}에서 체크포인트 로드됨")
             if isinstance(train_acc, (int, float)):
-                print(f"   ✓ Train Acc: {train_acc:.2%}")
+                print(f"   Train Acc: {train_acc:.2%}")
             else:
-                print(f"   ✓ Train Acc: {train_acc}")
+                print(f"   Train Acc: {train_acc}")
             if isinstance(val_acc, (int, float)):
-                print(f"   ✓ Val Acc: {val_acc:.2%}")
+                print(f"   Val Acc: {val_acc:.2%}")
             else:
-                print(f"   ✓ Val Acc: {val_acc}")
+                print(f"   Val Acc: {val_acc}")
         else:
             state_dict = checkpoint
 
@@ -80,11 +80,11 @@ def main(grid: Grid, context: Context) -> None:
         # 체크포인트가 'conv_stem.weight' 형식이면 'model.conv_stem.weight'로 변환
         first_key = next(iter(state_dict.keys()))
         if not first_key.startswith('model.'):
-            print("   ℹ️  state_dict 키에 'model.' 접두사 추가 중...")
+            print("   state_dict 키에 'model.' 접두사 추가 중...")
             state_dict = {f'model.{k}': v for k, v in state_dict.items()}
 
         global_model.load_state_dict(state_dict)
-        print("   ✓ 사전학습된 가중치 로드 성공!\n")
+        print("   사전학습된 가중치 로드 성공!\n")
     else:
         print("\n체크포인트가 제공되지 않았거나 파일을 찾을 수 없습니다. 랜덤 가중치로 시작합니다.\n")
 
@@ -93,7 +93,7 @@ def main(grid: Grid, context: Context) -> None:
     # 라운드별 모델 저장 디렉토리 생성
     models_dir = Path("models")
     models_dir.mkdir(exist_ok=True)
-    print(f"📁 라운드별 모델 저장 디렉토리: {models_dir}\n")
+    print(f"라운드별 모델 저장 디렉토리: {models_dir}\n")
 
     # FedAvg 전략 초기화
     strategy = FedAvg(
@@ -107,9 +107,9 @@ def main(grid: Grid, context: Context) -> None:
     current_arrays = arrays
 
     print(f"\n{'='*70}")
-    print(f"🚀 연합학습 시작!")
+    print(f"연합학습 시작!")
     print(f"{'='*70}")
-    print(f"📊 설정:")
+    print(f"설정:")
     print(f"   - 총 라운드: {num_rounds}")
     print(f"   - 로컬 에폭: {context.run_config['local-epochs']}")
     print(f"   - 학습률: {lr}")
@@ -121,7 +121,7 @@ def main(grid: Grid, context: Context) -> None:
     total_start_time = time.time()
 
     # tqdm 진행 바 생성
-    with tqdm(total=num_rounds, desc="🔄 연합학습 진행", unit="round", ncols=100, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]') as pbar:
+    with tqdm(total=num_rounds, desc="연합학습 진행", unit="round", ncols=100, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]') as pbar:
         for round_num in range(1, num_rounds + 1):
             round_start_time = time.time()
 
@@ -148,9 +148,9 @@ def main(grid: Grid, context: Context) -> None:
             remaining_rounds = num_rounds - round_num
             eta = avg_time_per_round * remaining_rounds
 
-            print(f"   ⏱️  Round {round_num} 소요 시간: {round_elapsed:.2f}초")
+            print(f"   Round {round_num} 소요 시간: {round_elapsed:.2f}초")
             if remaining_rounds > 0:
-                print(f"   ⏳ 예상 남은 시간: {eta:.2f}초 ({eta/60:.1f}분)")
+                print(f"   예상 남은 시간: {eta:.2f}초 ({eta/60:.1f}분)")
 
             # tqdm 업데이트
             pbar.set_postfix({
@@ -163,7 +163,7 @@ def main(grid: Grid, context: Context) -> None:
     # 전체 소요 시간 출력
     total_elapsed = time.time() - total_start_time
     print(f"\n{'='*70}")
-    print(f"✅ 전체 연합학습 완료!")
+    print(f"전체 연합학습 완료!")
     print(f"   총 소요 시간: {total_elapsed:.2f}초 ({total_elapsed/60:.1f}분)")
     print(f"   평균 라운드 시간: {total_elapsed/num_rounds:.2f}초")
     print(f"{'='*70}\n")
@@ -173,10 +173,10 @@ def main(grid: Grid, context: Context) -> None:
     print("최종 모델을 디스크에 저장 중...")
     state_dict = current_arrays.to_torch_state_dict()
     torch.save(state_dict, "final_model.pt")
-    print("✅ final_model.pt 저장 완료")
+    print("final_model.pt 저장 완료")
 
     # 저장된 모델 목록 출력
-    print(f"\n📂 저장된 모델 파일:")
+    print(f"\n저장된 모델 파일:")
     print(f"   - final_model.pt (최종 모델)")
     if models_dir.exists():
         for model_file in sorted(models_dir.glob("round_*.pt")):

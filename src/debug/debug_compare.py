@@ -27,7 +27,7 @@ best_keys = set(best_state.keys())
 final_keys = set(final_state.keys())
 
 if best_keys == final_keys:
-    print("✅ 키가 완전히 일치")
+    print("키가 완전히 일치")
     
     # 가중치 값 비교
     print("\n=== 가중치 차이 분석 (첫 10개 레이어) ===")
@@ -43,11 +43,11 @@ if best_keys == final_keys:
     print(f"\n평균 차이 (첫 {count}개 레이어): {avg_diff:.6f}")
     
     if avg_diff < 0.0001:
-        print("⚠️  가중치가 거의 동일 → 학습이 거의 안 된 것일 수 있음")
+        print("가중치가 거의 동일 → 학습이 거의 안 된 것일 수 있음")
     elif avg_diff < 0.01:
-        print("⚠️  가중치 변화가 매우 작음 → 학습이 조금만 진행됨")
+        print("가중치 변화가 매우 작음 → 학습이 조금만 진행됨")
     else:
-        print("✅ 가중치가 충분히 변경됨 → 학습은 진행됨")
+        print("가중치가 충분히 변경됨 → 학습은 진행됨")
     
     # 전체 레이어 평균 차이
     print("\n=== 전체 레이어 평균 차이 ===")
@@ -63,7 +63,7 @@ if best_keys == final_keys:
     print(f"최소: {min(all_diffs):.6f}")
     
 else:
-    print("❌ 키가 불일치")
+    print("키가 불일치")
     only_in_best = best_keys - final_keys
     only_in_final = final_keys - best_keys
     
@@ -76,4 +76,3 @@ else:
         print(f"\nfinal에만 있는 키 ({len(only_in_final)}개):")
         for key in list(only_in_final)[:5]:
             print(f"  {key}")
-

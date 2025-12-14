@@ -51,7 +51,7 @@ def load_model(checkpoint_path: str, device: torch.device):
         first_key = next(iter(state_dict.keys()))
         # best_model.pth: 'conv_stem.weight' → 'model.conv_stem.weight' 변환 필요
         if not first_key.startswith('model.'):
-            print("   ℹ️  state_dict 키에 'model.' 접두사 추가 중...")
+            print("   state_dict 키에 'model.' 접두사 추가 중...")
             state_dict = {f'model.{k}': v for k, v in state_dict.items()}
         # final_model.pt: 'model.conv_stem.weight' → 그대로 사용
 
@@ -59,14 +59,14 @@ def load_model(checkpoint_path: str, device: torch.device):
     model = model.to(device)
     model.eval()
 
-    print("   ✅ 모델 로드 성공")
+    print("   모델 로드 성공")
     if checkpoint_info:
         if checkpoint_info['epoch'] != 'N/A':
-            print(f"   ✓ Epoch: {checkpoint_info['epoch']}")
+            print(f"   Epoch: {checkpoint_info['epoch']}")
         if checkpoint_info['train_acc'] != 'N/A':
-            print(f"   ✓ Train Acc: {checkpoint_info['train_acc']:.2f}%")
+            print(f"   Train Acc: {checkpoint_info['train_acc']:.2f}%")
         if checkpoint_info['val_acc'] != 'N/A':
-            print(f"   ✓ Val Acc: {checkpoint_info['val_acc']:.2f}%")
+            print(f"   Val Acc: {checkpoint_info['val_acc']:.2f}%")
 
     return model, checkpoint_info
 
@@ -93,7 +93,7 @@ def evaluate(model, dataloader, criterion, device, class_names):
     print("Starting evaluation...")
 
     with torch.no_grad():
-        pbar = tqdm(dataloader, desc="🔍 평가 중", unit="batch")
+        pbar = tqdm(dataloader, desc="평가 중", unit="batch")
         for images, labels in pbar:
             images = images.to(device)
             labels = labels.to(device)
@@ -188,20 +188,20 @@ def print_results(results, class_names):
 def validate_one_model(model_path: str):
     """메인 함수"""
     print("=" * 60)
-    print("🧪 연합학습 최종 모델 테스트")
+    print("연합학습 최종 모델 테스트")
     print("=" * 60)
 
     # Device 설정
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"\n🖥️  디바이스: {device}")
+    print(f"\n디바이스: {device}")
 
     # NOTE: 모델 로드
-    print("\n1️⃣ 모델 로드 중...")
+    print("\n모델 로드 중...")
     checkpoint_path = model_path
     model, checkpoint_info = load_model(checkpoint_path, device)
 
-    # 2. 데이터셋 준비
-    print("\n2️⃣ 데이터셋 준비 중...")
+    # 데이터셋 준비
+    print("\n데이터셋 준비 중...")
     val_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -221,18 +221,17 @@ def validate_one_model(model_path: str):
         pin_memory=False
     )
 
-    print(f"   ✅ Validation 샘플 수: {len(val_dataset)}")
+    print(f"   Validation 샘플 수: {len(val_dataset)}")
 
     # 클래스 이름 추출
     idx_to_class = {v: k for k, v in val_dataset.class_to_idx.items()}
     class_names = [idx_to_class[i] for i in range(len(idx_to_class))]
-    print(f"   ✅ 클래스: {', '.join(class_names)}")
+    print(f"   클래스: {', '.join(class_names)}")
 
-    # 3. 평가
-    print("\n3️⃣ 모델 평가 중...")
+    # 평가
+    print("\n모델 평가 중...")
     criterion = nn.CrossEntropyLoss()
     results = evaluate(model, val_loader, criterion, device, class_names)
 
-    # 4. 결과 출력
+    # 결과 출력
     print_results(results, class_names)
-

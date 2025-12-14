@@ -38,13 +38,13 @@ print("=" * 60)
 # models 디렉토리의 모든 round_*.pt 파일 찾기
 models_dir = Path('models')
 if not models_dir.exists():
-    print("❌ models/ 디렉토리가 없습니다.")
+    print("models/ 디렉토리가 없습니다.")
     exit(1)
 
 round_files = sorted(models_dir.glob('round_*.pt'))
 
 if not round_files:
-    print("❌ round_*.pt 파일을 찾을 수 없습니다.")
+    print("round_*.pt 파일을 찾을 수 없습니다.")
     exit(1)
 
 results = []
@@ -94,11 +94,10 @@ if len(results) >= 3:
     print(f"  후반 (Round {results[-1][0]}): {last_acc:.2%}")
     
     if last_acc < first_acc:
-        print("\n⚠️  성능이 떨어졌습니다 → lr이 너무 높거나 과적합")
+        print("\n성능이 떨어졌습니다 → lr이 너무 높거나 과적합")
     elif last_acc - first_acc < 0.01:
-        print("\n⚠️  성능 향상이 거의 없습니다 → lr이 너무 낮거나 데이터 부족")
+        print("\n성능 향상이 거의 없습니다 → lr이 너무 낮거나 데이터 부족")
     else:
-        print("\n✅ 성능이 향상되었습니다")
+        print("\n성능이 향상되었습니다")
 
 print("=" * 60)
-

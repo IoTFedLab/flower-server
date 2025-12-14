@@ -35,12 +35,12 @@ clientapp = "iot_fed.client_app:app"
 
 # Custom config values accessible via `context.run_config`
 [tool.flwr.app.config]
-num-server-rounds = 30
+num-server-rounds = 5
 fraction-train = 1.0
-local-epochs = 1
-lr = 0.0001
+local-epochs = 4
+lr = 0.00005
 # FedProx configuration
-fedprox-mu = 0.1  # Proximal term coefficient (0.0 = FedAvg, >0 = FedProx)
+fedprox-mu = 2.0  # Proximal term coefficient (0.0 = FedAvg, >0 = FedProx)
 # Path to pretrained checkpoint (update this path to your actual checkpoint location)
 checkpoint-path = "checkpoints/final_model.pt"
 # Resume from previous federated learning result

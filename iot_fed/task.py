@@ -114,7 +114,7 @@ def train(net, trainloader, epochs, lr, device, global_params=None, mu=0.0):
         epoch_loss = 0.0
 
         # 배치별 진행 표시
-        with tqdm(trainloader, desc=f"📚 Epoch {epoch+1}/{epochs}", unit="batch", leave=False) as pbar:
+        with tqdm(trainloader, desc=f"Epoch {epoch+1}/{epochs}", unit="batch", leave=False) as pbar:
             for batch in pbar:
                 # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
                 if isinstance(batch, dict):
@@ -152,7 +152,7 @@ def train(net, trainloader, epochs, lr, device, global_params=None, mu=0.0):
 
         # 에폭 완료 후 평균 loss 출력
         avg_epoch_loss = epoch_loss / len(trainloader)
-        print(f"   ✓ Epoch {epoch+1}/{epochs} 완료 - Avg Loss: {avg_epoch_loss:.4f}")
+        print(f"   Epoch {epoch+1}/{epochs} 완료 - Avg Loss: {avg_epoch_loss:.4f}")
 
     avg_trainloss = running_loss / (len(trainloader) * epochs)
     return avg_trainloss
@@ -167,7 +167,7 @@ def test(net, testloader, device):
 
     with torch.no_grad():
         # 평가 진행 표시
-        with tqdm(testloader, desc="🔍 평가 중", unit="batch", leave=False) as pbar:
+        with tqdm(testloader, desc="평가 중", unit="batch", leave=False) as pbar:
             for batch in pbar:
                 # dict (CIFAR-10)와 tuple (커스텀 데이터셋) 형식 모두 처리
                 if isinstance(batch, dict):
@@ -190,5 +190,5 @@ def test(net, testloader, device):
 
     accuracy = correct / len(testloader.dataset)
     loss = loss / len(testloader)
-    print(f"   ✓ 평가 완료 - Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
+    print(f"   평가 완료 - Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
     return loss, accuracy

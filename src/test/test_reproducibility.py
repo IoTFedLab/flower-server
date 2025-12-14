@@ -128,14 +128,13 @@ print(f"  표준편차: {np.std(acc_nw2_list):.6f}")
 print(f"  최소-최대: {np.min(acc_nw2_list):.6f} - {np.max(acc_nw2_list):.6f}")
 
 if np.std(acc_nw0_list) < 0.0001:
-    print("\n✅ num_workers=0: 완벽한 재현성")
+    print("\nnum_workers=0: 완벽한 재현성")
 else:
-    print(f"\n⚠️  num_workers=0: 재현성 문제 (표준편차 {np.std(acc_nw0_list):.6f})")
+    print(f"\nnum_workers=0: 재현성 문제 (표준편차 {np.std(acc_nw0_list):.6f})")
 
 if np.std(acc_nw2_list) < 0.0001:
-    print("✅ num_workers=2: 완벽한 재현성")
+    print("num_workers=2: 완벽한 재현성")
 else:
-    print(f"⚠️  num_workers=2: 재현성 문제 (표준편차 {np.std(acc_nw2_list):.6f})")
+    print(f"num_workers=2: 재현성 문제 (표준편차 {np.std(acc_nw2_list):.6f})")
 
 print("=" * 60)
-

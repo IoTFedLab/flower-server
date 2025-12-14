@@ -35,13 +35,12 @@ try:
     print(f"\n평균 차이 (첫 10개 레이어): {avg_diff:.6f}")
     
     if avg_diff < 0.0001:
-        print("❌ Round 1에서 거의 학습 안 됨 → lr이 너무 낮거나 데이터 부족")
+        print("Round 1에서 거의 학습 안 됨 → lr이 너무 낮거나 데이터 부족")
     elif avg_diff > 1.0:
-        print("❌ Round 1에서 가중치가 너무 많이 변함 → lr이 너무 높음")
+        print("Round 1에서 가중치가 너무 많이 변함 → lr이 너무 높음")
     else:
-        print("✅ Round 1 학습이 정상적으로 진행됨")
+        print("Round 1 학습이 정상적으로 진행됨")
     
 except FileNotFoundError:
-    print("❌ models/round_1.pt 파일을 찾을 수 없습니다.")
+    print("models/round_1.pt 파일을 찾을 수 없습니다.")
     print("   연합학습을 실행했는지 확인하세요.")
-
